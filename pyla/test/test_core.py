@@ -148,9 +148,10 @@ class TestMatrixFunctions(unittest.TestCase):
     def test_inv(self):
         m = [[1., 2., 3.0],[3., 5., 7.0],[1.0, 1.0, 6.0]]
         im = inverse( m )
-        
-        e = mmul(im,m))
-        self.assertTrue( mat_eq( im, eye(5)))
+        iim = inverse( im )
+        e = mmul(im,m)
+        self.assertTrue( mat_eq( e, eye(3)))
+        self.assertTrue( mat_eq( m, iim, 1e-5) )
     
 
 

@@ -192,8 +192,9 @@ def _add_vec_scaled( v, dv, k, i0 ):
 def inverse( m, context = FloatContext ):
     """Matrix inverse, using Gauss-Jordan elimination"""
     n,n_ = shape_mat(m)
-    m = copy_mat(m)
-    assert (n==n_)
+    m = copy_mat(m) #the transformation is destructing, so make a copy.
+
+    assert (n==n_) #matris xhould be square
     fabs = context.fabs
     one, zero = context.one, context.zero
     def find_pivot( m, i ):
@@ -219,15 +220,16 @@ def inverse( m, context = FloatContext ):
         #normalize pivot row
         m_ii = m[i][i]
         _unscale_vec_inplace( m[i], m_ii,   i+1 )
-        m[i][i] = one
+        #m[i][i] = one                             #do not try to un-scale self; this should always give 1.
         _unscale_vec_inplace( im[i],    m_ii, 0 )
-        #make other rows zero
+        #make other rows to have zero in current column
         for j in xrange(n):
             if j == i : continue #skipping self
             k = m[j][i]
             _add_vec_scaled( m[j], m[i], -k, i+1 )
-            m[j][i] = zero
+            #m[j][i] = zero                        #do not try to eliminate i'th element; 0 alwasy should go here.
             _add_vec_scaled( im[j], im[i], -k, 0 )
     #Done!
+    #m should contain eye matrix at this step
     return im
 
