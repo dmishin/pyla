@@ -151,7 +151,23 @@ class TestMatrixConstructors(unittest.TestCase):
     def test_eye(self):
         e2 = [[1.0,0.0],[0.0,1.0]]
         self.assertTrue( mat_eq( e2, eye(2)))
-
+    def test_to_context_mat(self):
+        #let's take an integer matrix
+        m = [[1,2,3],[4,5,6]]
+        #and convert it ot the floating context
+        mf = to_context_mat( m, context=FloatContext )
+        #Then check that conversion was right
+        self.assertEqual( shape_mat(m), shape_mat(mf))
+        self.assertTrue( mat_eq( m, mf))
+        
+    def test_to_context_vec(self):
+        #let's take an integer vector
+        v = [1,2,3,4,5,6]
+        #and convert it ot the floating context
+        vf = to_context_vec( v, context=FloatContext )
+        #Then check that conversion was right
+        self.assertEqual( len(v), len(vf))
+        self.assertTrue( vec_eq( v, vf))
 
 class TestTrgMatrices(unittest.TestCase):
     def test_extract_ltri(self):

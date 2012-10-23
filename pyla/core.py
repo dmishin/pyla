@@ -14,26 +14,17 @@ except:
 
 import math
 import random
+from pyla.numeric_context import FloatContext
 
-class NumericContext:
-    def __init__(self, one, zero, fabs, sqrt, from_int):
-        self.one=one
-        self.zero=zero
-        self.fabs=fabs
-        self.sqrt=sqrt
-        self.from_int = from_int
-        assert( one * one == one )
-        assert( zero * zero == zero )
-        assert( one * zero == zero )
-        assert( fabs(one) == one )
+def to_context_mat( iterable, context=FloatContext ):
+    """Convert matrix to the given context"""
+    to_float = context.from_int
+    return [[to_float(x) for x in row] for row in iterable]
 
-FloatContext = NumericContext(
-    one = 1.0,
-    zero = 0.0,
-    fabs = abs,
-    sqrt = math.sqrt,
-    from_int = float 
-    )
+def to_context_vec( iterable, context=FloatContext ):
+    """Convert vector to the given context"""
+    to_float = context.from_int
+    return [to_float(x) for x in iterable]
 
 
 def lcombine( v1, v2, k1, k2 ):

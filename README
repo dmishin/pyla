@@ -1,3 +1,20 @@
 = PYLA =
 
 Pure python linear algebra
+
+* Features
+ - Basic matrix and verctor operations: multiplication, summation, scaling, transposition etc.
+ - Some more advanced matrix decompositions:
+   - QR decomposition
+   - SVD decomposition
+   
+
+* Performance
+  Performance is not a primary goal for PYLA. If you need performance, use of native libraries, such as Numpy, is highly recommended.
+
+* Why use PYLA 
+  PYLA is
+  - Lightweight. It is much smaller than Numpy
+  - Standard pure Python. It should work on every pyhton implementation, that is decent enough.
+  - Generic. It is not limited by floats. Particularly, you can use GMPY's long floats with all matrix algorithms.
+

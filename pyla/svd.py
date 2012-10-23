@@ -166,7 +166,7 @@ def svd( M, context = FloatContext, tol=1e-14, max_iter=2000):
         d,e,modif = msweep(d,e,U,V, context=context, eps=tol)
         if not modif:
             break
-    if modif: print "Warning: no convergence after %d steps"%(max_iter)
+    if modif: print ("Warning: no convergence after %d steps"%(max_iter))
     return transpose(U), d, V
 
 
@@ -199,11 +199,11 @@ if __name__=="__main__":
         #print ("Sweep %d"%(i))
         d,e,modif = msweep(d,e,U,V)
         if not modif:
-            print "Reaced convergence at %d"%i
+            print ("Reached convergence at %d"%i)
             break
-    print "Reminders:"
+    print ("Reminders:")
     print (e)
-    print "Singular values:"
+    print ("Singular values:")
     print (d)
     import numpy.linalg
     print (numpy.linalg.svd(BD)[1])
@@ -214,7 +214,7 @@ if __name__=="__main__":
     
     BD1 = reduce( mmul, [transpose(U), S, V] )
     if mat_eq( BD1, BD, 1e-5 ):
-        print "Equality found!!!!!!!!"
+        print ("Equality found!!!!!!!!")
                 
     
     print ("---------- Full test ----------")
