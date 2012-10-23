@@ -168,6 +168,25 @@ class TestSVD(unittest.TestCase):
         self.assertEqual( svd.rank( mmul( transpose(x), x) ),
                           3 )
 
+class TestPseudoInverse(unittest.TestCase):
+    def test_pinv_full_rank(self):
+        M = [[1.0, 2.0, 3.0, 4.0],
+             [3.0, 5.0, -1.0, 0.0],
+             [2.0, -2.0, 1.0, 1.0],
+             [-5.0, -2.0, -1.0, 0.0]]
+        self.assertEqual( svd.rank(M), 4 ) #Rank is full
+        #print (svd.svd(M)[1])
+        IM = svd.pinv(M)
+        #print (svd.svd(IM)[1])
+        IIM = svd.pinv(IM)
+        #print ("----")
+        #print (show_mat( mat_diff( M, IIM )))
+        #print (show_mat( mmul(M, IM) ) )
+        self.assertTrue( mat_eq( mmul(M, IM),
+                                 eye(4),
+                                 1e-5 ) ) #Inverse is right
+        self.assertTrue( mat_eq( M, IIM, 1e-5 ) ) #double pinv is the same as original
+
         
 if __name__ == '__main__':
     unittest.main()

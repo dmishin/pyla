@@ -1,5 +1,11 @@
+""" Singular value decomposition.
+
+This module implements SVD, usign 2-step algorithm:
+1) Bring matrix to the bidiagonal form, using Householder reflections
+2) Find bidiagonal SVD, using iterative algorithm
+"""
 from pyla.core import *
-from pyla.givens_qr import givens_inplace
+from pyla.givens_qr import givens_inplace #Givens rotation; usie in the iterative part of the algorithm
 
 def _householder_tfm_rows_tail_inplace(m, v):
     """Multiplies M matrix by Householder transformation
@@ -40,7 +46,7 @@ def _householder_tfm_cols_tail_inplace(m, v):
         for j, v_j in izip(rows_range,v):
             m[j][i] -= k * v_j
 
-def _householder_bring_vector( v, ort_index, context = FloatContext, tol=1e-6 ):
+def _householder_bring_vector( v, ort_index, context = FloatContext ):
     """For the given arbitrary vector v,
     returns a vector u; such that:
     householder reflection by u will bring vector v to the i-th axis: Hv = [0, l, 0, 0, ... ]
@@ -51,7 +57,7 @@ def _householder_bring_vector( v, ort_index, context = FloatContext, tol=1e-6 ):
     dv = normalized_vec( v, context )
     dv[ort_index] -= context.one
     n = vec_norm2( dv, context )
-    if n < tol: return None
+    if n < context.eps: return None
 
     return [x/n for x in dv]
 
@@ -59,26 +65,26 @@ def bidiagonal_transform( m, context=FloatContext, tol=1e-14 ):
     """Bidiagonal decomposition of the matrix.
     Returns 3 matrices: U,BD,V.
     U and V are orthogonal
-    BD is bifiagonal, with sub-diagonal non-zero.
+    BD is bidiagonal, with sub-diagonal non-zero.
     """
     n,n_ = shape_mat( m )
     m = copy_mat(m)
     assert( n==n_) #for now, only square matrices supported
     U,V = eye(n),eye(n)
     for i in xrange(n):
-        v = _householder_bring_vector( m[i][i:], 0, context=context, tol=tol  )
+        v = _householder_bring_vector( m[i][i:], 0, context=context )
         if v is not None:
             _householder_tfm_rows_tail_inplace( m, v )
-            _householder_tfm_rows_tail_inplace( U, v )
+            _householder_tfm_rows_tail_inplace( V, v )
 
         m = transpose(m)
         if i+1 < n:
-            v = _householder_bring_vector( m[i][i+1:], 0, context=context, tol=tol )
+            v = _householder_bring_vector( m[i][i+1:], 0, context=context )
             if v is not None:
                 _householder_tfm_rows_tail_inplace( m, v )
-                _householder_tfm_rows_tail_inplace( V, v )
+                _householder_tfm_rows_tail_inplace( U, v )
         m = transpose(m)
-    return V, m, transpose(U)
+    return U, m, transpose(V)
         
 
 def qr_householder( M, context=FloatContext, tol=1e-14 ):
@@ -87,7 +93,7 @@ def qr_householder( M, context=FloatContext, tol=1e-14 ):
     n, m = shape_mat( R )
     Q = eye(m)
     for i in xrange( n-1, 0, -1 ):
-        v = _householder_bring_vector( R[i][:i+1], -1, context, tol=tol )
+        v = _householder_bring_vector( R[i][:i+1], -1, context )
         if v is None: continue
 
         _householder_tfm_rows_head_inplace( R, v )
@@ -96,6 +102,7 @@ def qr_householder( M, context=FloatContext, tol=1e-14 ):
     return Q, transpose(R)
     
 def force_zeros(m, context=FloatContext, tol=1e-6):
+    """Make near-zero values real zeros"""
     fabs = context.fabs
     zero = context.zero
     return [[x if fabs(x) > tol else zero
@@ -103,8 +110,9 @@ def force_zeros(m, context=FloatContext, tol=1e-6):
             for row in m]
 
 
-def msweep( d, e, U, V, context = FloatContext, eps=1e-14 ):
-    """SVD of a bidiagonal matrix
+def _msweep( d, e, U, V, context = FloatContext, eps=1e-14 ):
+    """
+    Iterative part SVD of a bidiagonal matrix
     Algorithm: Demmel, Kahan
     http://www.math.pitt.edu/~sussmanm/2071Spring08/lab09/index.html
     """
@@ -112,11 +120,14 @@ def msweep( d, e, U, V, context = FloatContext, eps=1e-14 ):
     zero = context.zero
     fabs = context.fabs
     sqrt = context.sqrt
+    max_value = max( (max( fabs(di) for di in d ),
+                      max( fabs(ei) for ei in d ) ) )
+    tol = eps * max_value
     def annihilating_rotation( a, b ):
         """Calculates rotation matrix [c s; -s c], 
         that annihilates second element of size-2 vector [a;b]"""
-        if fabs(b) < eps:
-            return one, zero, a, False
+        if fabs(b) < tol:
+            return (one, zero, a, False)
         elif fabs(a) > fabs(b):
             t = b/a
             t1 = sqrt( one + t**2 )
@@ -154,16 +165,20 @@ def msweep( d, e, U, V, context = FloatContext, eps=1e-14 ):
     d[-1] = h*c_old
     return d, e, modified
     
-def svd( M, context = FloatContext, tol=1e-14, max_iter=2000):
-    """Singular value decomposition."""
+def svd( M, context = FloatContext, tol=None, max_iter=2000):
+    """Singular value decomposition, using 2-step algorithm.
+    tol - required relative tolerance for the iterative part. 
+          If None, (eps) from the context is used.
+    max_iter - maximal number of iterations
+    """
+    if tol is None: tol = context.eps
     #Step 1: get the bidiagonal reduction
     U, BD, V = bidiagonal_transform( M, context=context, tol=tol )
     d = diag(BD)
     e = diag(BD, -1)
     U = transpose(U)
     for i in range(max_iter):
-        #print ("Sweep %d"%(i))
-        d,e,modif = msweep(d,e,U,V, context=context, eps=tol)
+        d,e,modif = _msweep(d,e,U,V, context=context, eps=tol)
         if not modif:
             break
     if modif: print ("Warning: no convergence after %d steps"%(max_iter))
@@ -171,11 +186,25 @@ def svd( M, context = FloatContext, tol=1e-14, max_iter=2000):
 
 
 def rank( M, context = FloatContext, tol=1e-5, max_iter=2000):
-    U,s,V = svd(M, context=context, tol = tol * 0.1, max_iter=max_iter )
-    return sum( 1 if abs(si)>tol else 0
+    """Rank of the matrix"""
+    U,s,V = svd(M, context=context, tol = tol / 10, max_iter=max_iter )
+    fabs = context.fabs
+    return sum( 1 if fabs(si)>tol else 0
                 for si in s )
 
-    
+def pinv( M, context = FloatContext, treshold=1e-5, max_iter=2000):
+    """Pseudo-inverse.
+    Uses singular decomposition inside. All singular values below tol are ignored"""
+    U,s,V = svd(M, context=context, max_iter=max_iter )
+    one = context.one
+    zero = context.zero
+    fabs = context.fabs
+    abs_treshold = treshold * max( s )
+    s_inv = [ one/si if fabs(si) > abs_treshold else zero
+              for si in s ]
+    return mmul(mmul( transpose(V), from_diag(s_inv, context=context)), transpose(U))
+
+
 
 if __name__=="__main__":
     m = rand_mat(5,5)
@@ -197,7 +226,7 @@ if __name__=="__main__":
     U,V = eye(5), eye(5)
     for i in range(2000):
         #print ("Sweep %d"%(i))
-        d,e,modif = msweep(d,e,U,V)
+        d,e,modif = _msweep(d,e,U,V)
         if not modif:
             print ("Reached convergence at %d"%i)
             break
