@@ -145,9 +145,10 @@ def normalized_vec(v, context = FloatContext):
     n = vec_norm2( v, context)
     return [ x / n for x in v ]
 
-def rand_mat(n,m):
+def rand_mat(n,m,context=FloatContext):
     r = random.random
-    return [[r() for _ in xrange(m)] for __ in xrange(n)]
+    to_context = context.from_int
+    return [[to_context(r()) for _ in xrange(m)] for __ in xrange(n)]
 
 def show_mat(M):
     return "\n".join( str(row) for row in M )
@@ -176,3 +177,57 @@ def extract_utri( m, context = FloatContext ):
     rows, cols = shape_mat(m)
     return [ [context.zero]*i + row[i:]
              for i, row in enumerate(m) ]
+################################################################################
+# Matrix inverse
+################################################################################
+
+def _unscale_vec_inplace( v, k, i0 ):
+    for i in xrange(i0, len(v)):
+        v[i] /= k
+
+def _add_vec_scaled( v, dv, k, i0 ):
+    for i in xrange(i0, len(v)):
+        v[i] += dv[i] * k
+
+def inverse( m, context = FloatContext ):
+    """Matrix inverse, using Gauss-Jordan elimination"""
+    n,n_ = shape_mat(m)
+    m = copy_mat(m)
+    assert (n==n_)
+    fabs = context.fabs
+    one, zero = context.one, context.zero
+    def find_pivot( m, i ):
+        j_pivot = i
+        m_pivot = fabs(m[i][i])
+        for j in xrange( i+1, n ):
+            m_ji = fabs(m[j][i])
+            if m_ji > m_pivot:
+                m_pivot, j_pivot = m_ji, j
+        return j_pivot
+                
+    
+    im = eye( n, context = context ) #original inverse
+
+    #Now apply same linear transformations to m and im; to make m equal to eye
+    for i in xrange(n):
+        #Choose a pivot: a row with maximal element [i, j]
+        pivot_row = find_pivot( m, i )
+        #Put pivot row to the current position
+        if pivot_row != i:
+            m[i], m[pivot_row] = m[pivot_row], m[i]
+            im[i], im[pivot_row] = im[pivot_row], im[i]
+        #normalize pivot row
+        m_ii = m[i][i]
+        _unscale_vec_inplace( m[i], m_ii,   i+1 )
+        m[i][i] = one
+        _unscale_vec_inplace( im[i],    m_ii, 0 )
+        #make other rows zero
+        for j in xrange(n):
+            if j == i : continue #skipping self
+            k = m[j][i]
+            _add_vec_scaled( m[j], m[i], -k, i+1 )
+            m[j][i] = zero
+            _add_vec_scaled( im[j], im[i], -k, 0 )
+    #Done!
+    return im
+

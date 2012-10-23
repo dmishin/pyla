@@ -145,7 +145,14 @@ class TestMatrixFunctions(unittest.TestCase):
                                   [0, 6, 3, -3],
                                   [0, 0, 7,  4]] ) )
 
+    def test_inv(self):
+        m = [[1., 2., 3.0],[3., 5., 7.0],[1.0, 1.0, 6.0]]
+        im = inverse( m )
         
+        e = mmul(im,m))
+        self.assertTrue( mat_eq( im, eye(5)))
+    
+
 
 class TestMatrixConstructors(unittest.TestCase):
     def test_eye(self):
@@ -182,6 +189,8 @@ class TestTrgMatrices(unittest.TestCase):
         self.assertTrue( mat_eq( ml,
                                  [[1,2,3],[0,5,6],[0,0,9]]))
 
+
+        
     
 if __name__ == '__main__':
     unittest.main()
