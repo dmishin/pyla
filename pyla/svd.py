@@ -34,18 +34,6 @@ def _householder_tfm_rows_head_inplace(m, v):
         m_i[:n1] = [ x - k * y for x,y in zip( m_i[:n1], v ) ]
 
     
-def _householder_tfm_cols_tail_inplace(m, v):
-    cols, rows  = shape_mat( m )
-    n1 = rows - len(v)
-    rows_range = xrange( n1, rows )
-    for i in xrange(cols): #i is a column index
-        m_i = [ m[j][i] for j in rows_range ] #significant part of the i'th column
-        
-        k = 2 * dot( m_i, v )
-
-        for j, v_j in izip(rows_range,v):
-            m[j][i] -= k * v_j
-
 def _householder_bring_vector( v, ort_index, context = FloatContext ):
     """For the given arbitrary vector v,
     returns a vector u; such that:
@@ -61,7 +49,7 @@ def _householder_bring_vector( v, ort_index, context = FloatContext ):
 
     return [x/n for x in dv]
 
-def bidiagonal_transform( m, context=FloatContext, tol=1e-14 ):
+def bidiagonal_transform( m, context=FloatContext):
     """Bidiagonal decomposition of the matrix.
     Returns 3 matrices: U,BD,V.
     U and V are orthogonal
@@ -87,7 +75,7 @@ def bidiagonal_transform( m, context=FloatContext, tol=1e-14 ):
     return U, m, transpose(V)
         
 
-def qr_householder( M, context=FloatContext, tol=1e-14 ):
+def qr_householder( M, context=FloatContext ):
     """QR decomposition, based on Householder reflections"""
     R = transpose(M)
     n, m = shape_mat( R )
@@ -173,11 +161,11 @@ def svd( M, context = FloatContext, tol=None, max_iter=2000):
     """
     if tol is None: tol = context.eps
     #Step 1: get the bidiagonal reduction
-    U, BD, V = bidiagonal_transform( M, context=context, tol=tol )
+    U, BD, V = bidiagonal_transform( M, context=context )
     d = diag(BD)
     e = diag(BD, -1)
     U = transpose(U)
-    for i in range(max_iter):
+    for i in xrange(max_iter):
         d,e,modif = _msweep(d,e,U,V, context=context, eps=tol)
         if not modif:
             break

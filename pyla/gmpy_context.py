@@ -25,7 +25,7 @@ if __name__=="__main__":
     m = pylinalg.to_context_mat(pylinalg.rand_mat(4,4),
                                 context=context)
 
-    u,s,v = svd.svd( m, context=context, tol = gmpy.mpf(1e-150, 300) )
+    u,s,v = svd.svd( m, context=context, tol = context.from_int(1e-150) )
     print (pylinalg.show_mat(u))
     print (pylinalg.show_mat(v))
     print (s)

@@ -170,6 +170,7 @@ class TestSVD(unittest.TestCase):
 
 class TestPseudoInverse(unittest.TestCase):
     def test_pinv_full_rank(self):
+        """First check pinv on the matrices of full rank, when PINV is the same as INV"""
         M = [[1.0, 2.0, 3.0, 4.0],
              [3.0, 5.0, -1.0, 0.0],
              [2.0, -2.0, 1.0, 1.0],
