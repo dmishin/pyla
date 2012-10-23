@@ -169,7 +169,7 @@ def svd( M, context = FloatContext, tol=None, max_iter=2000):
         d,e,modif = _msweep(d,e,U,V, context=context, eps=tol)
         if not modif:
             break
-    if modif: print ("Warning: no convergence after %d steps"%(max_iter))
+    if modif: print ("Warning: SVD: no convergence after %d steps"%(max_iter))
     return transpose(U), d, V
 
 
