@@ -52,12 +52,24 @@ def mat_eq( m1, m2, tol=1e-14 ):
 def vec_scale( v, k ):
     return [ x*k for x in v ]
 
+def vec_scale_inplace( v, k ):
+    for i in xrange(len(v)):
+        v[i] *= k
+def vec_add_inplace( v1, v2 ):
+    for i in xrange( len(v1) ):
+        v1[i] += v2[i]
 def mat_scale( m, k ):
     return [ vec_scale(row, k) for row in m ]
 
+def mat_scale_inplace( m, k ):
+    for row in m:
+        vec_scale_inplace( row, k )
+
 def mat_sum( m1, m2 ):
     return [ vec_sum(r1, r2) for r1, r2 in izip(m1,m2)]
-
+def mat_add_inplace( m1, m2 ):
+    for row1, row2 in izip(m1,m2):
+        vec_add_inplace( row1, row2 )
 def mat_diff(m1, m2):
     return [ vec_diff(r1, r2) for r1, r2 in izip(m1,m2)]
 

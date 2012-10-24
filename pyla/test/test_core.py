@@ -154,7 +154,46 @@ class TestMatrixFunctions(unittest.TestCase):
         self.assertTrue( mat_eq( m, iim, 1e-5) )
     
 
-
+class TestInplaceVectorOperations(unittest.TestCase):
+    def setUp(self):
+        self.v1 = to_context_vec([1,2,3])
+        self.v2 = to_context_vec([1,-1,2])
+    def test_vec_add_inplace(self):
+        vec_add_inplace( self.v1, self.v2 )
+        self.assertTrue( vec_eq( v1, [2,1,5] ) )
+    def test_vec_add_inplace(self):
+        vec_add_inplace( self.v1, self.v2 )
+        self.assertTrue( vec_eq( self.v1, [2,1,5] ) )
+        self.assertTrue( vec_eq( self.v2, [1,-1,2] ) )
+    def test_vec_scale_inplace(self):
+        vec_scale_inplace( self.v1, 0.5 )
+        self.assertTrue( vec_eq( self.v1, [0.5, 1.0, 1.5] ) )
+class TestInplaceMatrixOperations(unittest.TestCase):
+    def setUp(self):
+        self.m1 = to_context_mat([[1,2,3],
+                                  [4,5,6],
+                                  [1,0,0]])
+        self.m2 = to_context_mat([[1,-1,2],
+                                  [1,0,0],
+                                  [-1,-1,0]])
+    def test_mat_add_inplace(self):
+        mat_add_inplace(self.m1, self.m2)
+        self.assertTrue(mat_eq( self.m1,
+                                [[2,1,5],
+                                 [5,5,6],
+                                 [0,-1,0]]))
+        
+        self.assertTrue(mat_eq( self.m2,
+                                [[1,-1,2],
+                                 [1,0,0],
+                                 [-1,-1,0]])) #check that m2 has not changed
+    def test_mat_scale_inplace(self):
+        mat_scale_inplace( self.m1, 0.1 )
+        self.assertTrue( mat_eq( self.m1,
+                                 [[0.1,0.2,0.3],
+                                  [0.4,0.5,0.6],
+                                  [0.1,0,0]]) )
+        
 class TestMatrixConstructors(unittest.TestCase):
     def test_eye(self):
         e2 = [[1.0,0.0],[0.0,1.0]]
