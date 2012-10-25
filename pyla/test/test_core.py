@@ -66,6 +66,13 @@ class TestMatrixFunctions(unittest.TestCase):
         self.assertTrue( mat_eq(c, mat_sum(a,b)))
         self.assertTrue( mat_eq(d, mat_diff(a,b)))
 
+    def test_lcombine_mat(self):
+        a = [[1.0, 2.0],[3.0,4.0]]
+        b = [[1.0,-1.0],[3.0,2.0]]
+        c = [[1,  5]   ,[3,  6 ] ]
+        self.assertTrue( mat_eq(c, 
+                                combine_mat(a,b,2,-1)))
+
     def test_mmul(self):
         import numpy
         for i in xrange(100):

@@ -30,7 +30,9 @@ def to_context_vec( iterable, context=FloatContext ):
 def lcombine( v1, v2, k1, k2 ):
     """Linear combination of 2 vectors (lists)"""
     return [ x*k1 + y*k2 for (x,y) in izip(v1,v2) ]
-
+def combine_mat( m1, m2, k1, k2 ):
+    """Linear combination of 2 matrices"""
+    return [ lcombine( r1, r2, k1, k2 )for r1, r2 in izip(m1, m2) ]
 def vec_eq( v1, v2, tol=1e-14, context = FloatContext ):
     assert( len(v1) == len(v2) )
     fabs = context.fabs
