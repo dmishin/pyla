@@ -25,14 +25,20 @@ def to_context_vec( iterable, context=FloatContext ):
     """Convert vector to the given context"""
     to_float = context.from_int
     return [to_float(x) for x in iterable]
+################################################################################
+# Matrix linear operations
+################################################################################
 
-
-def lcombine( v1, v2, k1, k2 ):
-    """Linear combination of 2 vectors (lists)"""
-    return [ x*k1 + y*k2 for (x,y) in izip(v1,v2) ]
 def combine_mat( m1, m2, k1, k2 ):
     """Linear combination of 2 matrices"""
     return [ lcombine( r1, r2, k1, k2 )for r1, r2 in izip(m1, m2) ]
+def mat_sum( m1, m2 ):
+    return [ vec_sum(r1, r2) for r1, r2 in izip(m1,m2)]
+def mat_diff(m1, m2):
+    return [ vec_diff(r1, r2) for r1, r2 in izip(m1,m2)]
+def mat_scale( m, k ):
+    return [ vec_scale(row, k) for row in m ]
+
 def vec_eq( v1, v2, tol=1e-14, context = FloatContext ):
     assert( len(v1) == len(v2) )
     fabs = context.fabs
@@ -40,19 +46,41 @@ def vec_eq( v1, v2, tol=1e-14, context = FloatContext ):
         if fabs(x-y)>tol: return False
     return True
 
+################################################################################
+# Matrix inplace linear operations
+################################################################################
+
+def mat_scale_inplace( m, k ):
+    for row in m:
+        vec_scale_inplace( row, k )
+
+def mat_add_inplace( m1, m2 ):
+    for row1, row2 in izip(m1,m2):
+        vec_add_inplace( row1, row2 )
+
+################################################################################
+# Vector linear operations
+################################################################################
+def lcombine( v1, v2, k1, k2 ):
+    """Linear combination of 2 vectors (lists)"""
+    return [ x*k1 + y*k2 for (x,y) in izip(v1,v2) ]
+
+def vec_scale( v, k ):
+    return [ x*k for x in v ]
+
 def vec_sum( v1, v2 ):
     return [ x+y for x,y in izip(v1,v2) ]
 
 def vec_diff( v1, v2 ):
     return [ x-y for x,y in izip(v1,v2) ]
 
+################################################################################
+# Vector inplace linear operations
+################################################################################
 def mat_eq( m1, m2, tol=1e-14 ):
     for x,y in izip(m1,m2):
         if not vec_eq(x,y,tol): return False
     return True
-
-def vec_scale( v, k ):
-    return [ x*k for x in v ]
 
 def vec_scale_inplace( v, k ):
     for i in xrange(len(v)):
@@ -60,20 +88,10 @@ def vec_scale_inplace( v, k ):
 def vec_add_inplace( v1, v2 ):
     for i in xrange( len(v1) ):
         v1[i] += v2[i]
-def mat_scale( m, k ):
-    return [ vec_scale(row, k) for row in m ]
 
-def mat_scale_inplace( m, k ):
-    for row in m:
-        vec_scale_inplace( row, k )
-
-def mat_sum( m1, m2 ):
-    return [ vec_sum(r1, r2) for r1, r2 in izip(m1,m2)]
-def mat_add_inplace( m1, m2 ):
-    for row1, row2 in izip(m1,m2):
-        vec_add_inplace( row1, row2 )
-def mat_diff(m1, m2):
-    return [ vec_diff(r1, r2) for r1, r2 in izip(m1,m2)]
+################################################################################
+# SPecial matrices
+################################################################################
 
 def eye(n, context = FloatContext):
     """Identity matrix"""
@@ -86,15 +104,18 @@ def _ort(i,n,zero,one):
     o[i] = one
     return o
 
+################################################################################
+# Matrix and vector multiplication
+################################################################################
+def mmul( m1, m2 ):
+    """Matrix multiplication"""
+    return [ mul_row_mat( m1_row, m2) for m1_row in m1 ]
+
 def mul_row_mat( row, m ):
     """Product of a row matrix (single list) and rectangular matrix"""
     assert( len(row) == len(m) )
     return reduce( vec_sum, 
                   (vec_scale(m_i, r_i) for r_i, m_i in izip(row, m)))
-
-def mmul( m1, m2 ):
-    """Matrix multiplication"""
-    return [ mul_row_mat( m1_row, m2) for m1_row in m1 ]
 
 def mv_mul( m, v ):
     """M*v"""
@@ -102,8 +123,13 @@ def mv_mul( m, v ):
     return [dot( m_i, v ) for m_i in m ]
 
 def dot( v1, v2 ):
+    """Scalar product of 2 vectors"""
     return sum( x*y for x,y in izip(v1,v2) )
 
+
+################################################################################
+# Matrix and vector multiplication
+################################################################################
 def transpose(m):
     return [list(row) for row in izip( *m )]
 
@@ -191,10 +217,10 @@ def extract_utri( m, context = FloatContext ):
     rows, cols = shape_mat(m)
     return [ [context.zero]*i + row[i:]
              for i, row in enumerate(m) ]
+
 ################################################################################
 # Matrix inverse
 ################################################################################
-
 def _unscale_vec_inplace( v, k, i0 ):
     for i in xrange(i0, len(v)):
         v[i] /= k
@@ -203,12 +229,17 @@ def _add_vec_scaled( v, dv, k, i0 ):
     for i in xrange(i0, len(v)):
         v[i] += dv[i] * k
 
-def inverse( m, context = FloatContext ):
-    """Matrix inverse, using Gauss-Jordan elimination"""
+def solve( m, b, context = FloatContext ):
+    """Solve linear equation: Ax=B. 
+    B must be matrix
+    """
     n,n_ = shape_mat(m)
-    m = copy_mat(m) #the transformation is destructing, so make a copy.
+    assert( n==n_) #m must be square
+    assert( n==len(b) ) #M and b must match
 
-    assert (n==n_) #matris xhould be square
+    m = copy_mat(m) #the transformation is destructing, so make a copy.
+    im = b
+
     fabs = context.fabs
     one, zero = context.one, context.zero
     def find_pivot( m, i ):
@@ -247,3 +278,10 @@ def inverse( m, context = FloatContext ):
     #m should contain eye matrix at this step
     return im
 
+
+def inverse( m, context = FloatContext ):
+    """Matrix inverse, using Gauss-Jordan elimination"""
+    n,n_ = shape_mat(m)
+    assert (n==n_) #matris should be square
+
+    return solve( m, eye(n), context=context )
