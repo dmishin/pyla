@@ -229,19 +229,20 @@ def _add_vec_scaled( v, dv, k, i0 ):
     for i in xrange(i0, len(v)):
         v[i] += dv[i] * k
 
-def solve( m, b, context = FloatContext ):
+def solve( m, B, context = FloatContext, copy_a=True, copy_b=True ):
     """Solve linear equation: Ax=B. 
     B must be matrix
+    When 
     """
     n,n_ = shape_mat(m)
     assert( n==n_) #m must be square
-    assert( n==len(b) ) #M and b must match
+    assert( n==len(B) ) #M and b must match
 
-    m = copy_mat(m) #the transformation is destructing, so make a copy.
-    im = copy_mat(b)
+    #the transformation is destructing, so make a copy, if required
+    if copy_a: m = copy_mat(m) 
+    if copy_b: B = copy_mat(B)
 
-    fabs = context.fabs
-    one, zero = context.one, context.zero
+    fabs, one, zero = context.fabs, context.one, context.zero
     def find_pivot( m, i ):
         j_pivot = i
         m_pivot = fabs(m[i][i])
@@ -251,29 +252,29 @@ def solve( m, b, context = FloatContext ):
                 m_pivot, j_pivot = m_ji, j
         return j_pivot
 
-    #Now apply same linear transformations to m and im; to make m equal to eye
+    #Now apply same linear transformations to m and B; to make m equal to eye
     for i in xrange(n):
-        #Choose a pivot: a row with maximal element [i, j]
+        #Choose a pivot: a row with maxBal element [i, j]
         pivot_row = find_pivot( m, i )
         #Put pivot row to the current position
         if pivot_row != i:
             m[i], m[pivot_row] = m[pivot_row], m[i]
-            im[i], im[pivot_row] = im[pivot_row], im[i]
+            B[i], B[pivot_row] = B[pivot_row], B[i]
         #normalize pivot row
         m_ii = m[i][i]
-        _unscale_vec_inplace( m[i], m_ii,   i+1 )
-        #m[i][i] = one                             #do not try to un-scale self; this should always give 1.
-        _unscale_vec_inplace( im[i],    m_ii, 0 )
+        _unscale_vec_inplace( m[i], m_ii, i+1 )
+        #m[i][i] = one #do not try to un-scale self; this should always give 1.
+        _unscale_vec_inplace( B[i], m_ii, 0 )
         #make other rows to have zero in current column
         for j in xrange(n):
             if j == i : continue #skipping self
             k = m[j][i]
             _add_vec_scaled( m[j], m[i], -k, i+1 )
-            #m[j][i] = zero                        #do not try to eliminate i'th element; 0 alwasy should go here.
-            _add_vec_scaled( im[j], im[i], -k, 0 )
+            #m[j][i] = zero                        #do not try to elBinate i'th element; 0 alwasy should go here.
+            _add_vec_scaled( B[j], B[i], -k, 0 )
     #Done!
     #m should contain eye matrix at this step
-    return im
+    return B
 
 
 def inverse( m, context = FloatContext ):
@@ -281,4 +282,4 @@ def inverse( m, context = FloatContext ):
     n,n_ = shape_mat(m)
     assert (n==n_) #matris should be square
 
-    return solve( m, eye(n), context=context )
+    return solve( m, eye(n), context=context, copy_b=False )
