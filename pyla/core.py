@@ -287,9 +287,9 @@ def solve( m, B, context = FloatContext, copy_a=True, copy_b=True ):
     return B
 
 
-def inverse( m, context = FloatContext ):
+def inverse( m, context = FloatContext, copy_m=True ):
     """Matrix inverse, using Gauss-Jordan elimination"""
     n,n_ = shape_mat(m)
     assert (n==n_) #matris should be square
 
-    return solve( m, eye(n), context=context, copy_b=False )
+    return solve( m, eye(n), context=context, copy_b=False, copy_a=copy_m )
