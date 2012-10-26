@@ -85,9 +85,14 @@ def mat_eq( m1, m2, tol=1e-14 ):
 def vec_scale_inplace( v, k ):
     for i in xrange(len(v)):
         v[i] *= k
+
 def vec_add_inplace( v1, v2 ):
     for i in xrange( len(v1) ):
         v1[i] += v2[i]
+
+def vec_combine_inplace( v1, v2, k ):
+    for i in xrange( len(v1) ):
+        v1[i] += k*v2[i]
 
 ################################################################################
 # SPecial matrices
@@ -103,6 +108,10 @@ def _ort(i,n,zero,one):
     o = [zero] * n
     o[i] = one
     return o
+
+def zeros(n,m,context = FloatContext):
+    zero = context.zero
+    return [[zero for _ in xrange(m)] for __ in xrange(n)]
 
 ################################################################################
 # Matrix and vector multiplication
@@ -165,10 +174,6 @@ def from_diag(d, context = FloatContext):
     set_diag(S,d)
     return S
 
-def zeros(n,m,context = FloatContext):
-    zero = context.zero
-    return [[zero for _ in xrange(m)] for __ in xrange(n)]
-
 def copy_mat( m ):
     return [ row[:] for row in m ]
 
@@ -193,6 +198,11 @@ def rand_mat(n,m,context=FloatContext):
 def show_mat(M):
     return "\n".join( str(row) for row in M )
 
+def mat_max(m):
+    return max( max(row) for row in m )
+
+def mat_min(m):
+    return min( min(row) for row in m )
 
 ################################################################################
 # Triangular matrices

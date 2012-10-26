@@ -190,6 +190,9 @@ class TestInplaceVectorOperations(unittest.TestCase):
     def test_vec_scale_inplace(self):
         vec_scale_inplace( self.v1, 0.5 )
         self.assertTrue( vec_eq( self.v1, [0.5, 1.0, 1.5] ) )
+    def test_vec_combine_inplace(self):
+        vec_combine_inplace( self.v1, self.v2, 1.5 )
+        self.assertTrue( vec_eq( self.v1, [2.5, 0.5, 6] ) )
 class TestInplaceMatrixOperations(unittest.TestCase):
     def setUp(self):
         self.m1 = to_context_mat([[1,2,3],
@@ -215,6 +218,7 @@ class TestInplaceMatrixOperations(unittest.TestCase):
                                  [[0.1,0.2,0.3],
                                   [0.4,0.5,0.6],
                                   [0.1,0,0]]) )
+
         
 class TestMatrixConstructors(unittest.TestCase):
     def test_eye(self):
