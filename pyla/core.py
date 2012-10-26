@@ -238,7 +238,7 @@ def solve( m, b, context = FloatContext ):
     assert( n==len(b) ) #M and b must match
 
     m = copy_mat(m) #the transformation is destructing, so make a copy.
-    im = b
+    im = copy_mat(b)
 
     fabs = context.fabs
     one, zero = context.one, context.zero
@@ -250,9 +250,6 @@ def solve( m, b, context = FloatContext ):
             if m_ji > m_pivot:
                 m_pivot, j_pivot = m_ji, j
         return j_pivot
-                
-    
-    im = eye( n, context = context ) #original inverse
 
     #Now apply same linear transformations to m and im; to make m equal to eye
     for i in xrange(n):

@@ -159,7 +159,22 @@ class TestMatrixFunctions(unittest.TestCase):
         e = mmul(im,m)
         self.assertTrue( mat_eq( e, eye(3)))
         self.assertTrue( mat_eq( m, iim, 1e-5) )
-    
+        
+    def test_solve(self):
+        """Test solving matrix equations Ax=B"""
+        A = [[1., 2., 3.0],
+             [3., 5., 7.0],
+             [1.0, 1.0, 6.0]]
+        B = [[ 14.,   7.],
+             [ 34.,  16.],
+             [ 21.,  12.]]
+        X = solve(A,B)
+
+        self.assertTrue( mat_eq( X,
+                                 [[ 1, -1],
+                                  [ 2,  1],
+                                  [ 3,  2]],
+                                 1e-5) )
 
 class TestInplaceVectorOperations(unittest.TestCase):
     def setUp(self):
