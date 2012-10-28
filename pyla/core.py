@@ -58,6 +58,10 @@ def mat_add_inplace( m1, m2 ):
     for row1, row2 in izip(m1,m2):
         vec_add_inplace( row1, row2 )
 
+def mat_combine_inplace( m1, m2, k ):
+    for row1, row2 in izip(m1,m2):
+        vec_combine_inplace( row1, row2, k )
+
 ################################################################################
 # Vector linear operations
 ################################################################################
