@@ -20,3 +20,33 @@ class TestMatrixExponent(PylaTestCase):
         self.assertMatrixEqual( em,
                                 from_diag( map(math.exp, d) ) )
     
+    def test_nontrivial(self):
+        v = [[1.0, 2.0, -1.0],
+             [-1.0, 5.0, 5.0],
+             [-2.0, 7.0, 3.0]]
+        iv = inverse(v)
+        dd = [1.0, 0.5, -1.0]
+
+        d = from_diag( dd )
+        ed = from_diag( map( math.exp, dd ) )
+
+        M = reduce( mmul, [v, d, iv] )
+        EM_ref = reduce( mmul, [v, ed, iv] )
+
+        EM_exp = expm(M)
+
+        self.assertMatrixEqual( EM_exp, EM_ref )
+
+    def test_expms(self):
+        """Calculating of exponents expm(t*M)"""
+        
+        v = [[1.0, 2.0, -1.0],
+             [-1.0, 5.0, 5.0],
+             [-2.0, 7.0, 3.0]]
+        exp_v = expms(v)
+
+        tt = [0.0, 1.0, -1.0, 2.0, 3.0]
+        for t in tt:
+            M1 = expm( mat_scale( v, t ) )
+            M2 = exp_v( t )
+            self.assertMatrixEqual( M1, M2 )
