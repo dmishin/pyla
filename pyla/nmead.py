@@ -1,5 +1,5 @@
 from pyla.core import *
-import random
+from pyla.numeric_context import FloatContext
 from itertools import izip
 import math
 
@@ -15,7 +15,7 @@ def maxidx( xs ):
 def minidx( xs ):
     return min( enumerate(xs), key = second )
 
-def nmead(func, poly, abgd = (1.0, 2.0, 0.35, 0.5), tol = 1e-6, max_calls = 10000):
+def nmead(func, poly, abgd = (1.0, 2.0, 0.35, 0.5), tol = 1e-6, max_calls = 10000, context = FloatContext):
     """Nelder-Mead multivariate optimization.
     Arguments:
      func - Function to optimize.
@@ -26,13 +26,15 @@ def nmead(func, poly, abgd = (1.0, 2.0, 0.35, 0.5), tol = 1e-6, max_calls = 1000
     Retur value: 3-tuple (x_min, y_min, calls_done)
     """
     
-    alpha, beta, gamma, delta = abgd
+    alpha, beta, gamma, delta = map(context.from_int, abgd)
+    tol = context.from_int(tol)
+    one = context.one
     def refl(xc, x):
-        return lcombine(xc, x, 1+alpha, -alpha)
+        return lcombine(xc, x, one+alpha, -alpha)
     def expand(xc, x):
-        return lcombine(xc, x, 1-beta, beta)
+        return lcombine(xc, x, one-beta, beta)
     def shrink(xc, x):
-        return lcombine(xc, x, 1-gamma, gamma)
+        return lcombine(xc, x, one-gamma, gamma)
     def is_converged(i_best, points):
         for xis in izip(*points):
             if max(xis)-min(xis) >= tol: return False
@@ -113,7 +115,7 @@ def nmead(func, poly, abgd = (1.0, 2.0, 0.35, 0.5), tol = 1e-6, max_calls = 1000
             x_best = poly[i_best]
             for i in xrange(N+1):
                 if i != i_best:
-                    pi_scaled = lcombine(x_best, poly[i], 1-delta, delta)
+                    pi_scaled = lcombine(x_best, poly[i], one-delta, delta)
                     poly[i] = pi_scaled
                     vals[i] = func(pi_scaled)
             calculations += N
@@ -128,12 +130,13 @@ def nmead(func, poly, abgd = (1.0, 2.0, 0.35, 0.5), tol = 1e-6, max_calls = 1000
 
 
     
-def fmin_nmead(func, x0, dx=1.0, tol=1e-6, max_calls = 10000):
+def fmin_nmead(func, x0, dx=1.0, tol=1e-6, max_calls = 10000, context=FloatContext):
     """Function minimiser, based on Nelder-Mead method.
     Returns tuple:
     (x_best, y_best, n_calculations)"""
+    dx = context.from_int(dx)
     n = len(x0)
     poly = [x0[:] for _ in xrange(n+1)]
     for i in xrange(n):
         poly[i][i] += dx
-    return nmead(func, poly, tol=tol, max_calls=max_calls)
+    return nmead(func, poly, tol=tol, max_calls=max_calls, context=context)
