@@ -1,7 +1,7 @@
 from pyla.core import *
 import random
 from itertools import izip
-
+import math
 def sumv(vecs):
     s = vecs[0][:]
     for v in vecs[1:]:
@@ -43,10 +43,22 @@ def nmead(func, poly, abgd = (1.0, 2.0, 0.35, 0.5), tol = 1e-6, max_calls = 1000
         return lcombine(xc, x, 1-beta, beta)
     def shrink(xc, x):
         return lcombine(xc, x, 1-gamma, gamma)
-    def is_converged(points):
+    def is_converged(i_best, points):
         for xis in izip(*points):
             if max(xis)-min(xis) >= tol: return False
         return True
+    def is_converged_sum(i_best, points):
+        s = sum( max(xis)-min(xis) for xis in izip(*points) )
+        return s < tol
+    def is_converged_sqr(i_best, points):
+        p0 = points[i_best]
+        tol2 = tol**2
+        for i, pi in enumerate(points):
+            if i == i_best: continue
+            d2 = sum( (pij-p0j)**2 for pij, p0j in izip(pi, p0) )
+            if d2 >= tol2: return False
+        return True
+
     ###########################################################
     poly = poly[:]
     calculations = 0
@@ -120,13 +132,13 @@ def nmead(func, poly, abgd = (1.0, 2.0, 0.35, 0.5), tol = 1e-6, max_calls = 1000
         #Check for convergence every N shrinks.
         if n_shrinks > N:
             n_shrinks = 0
-            if is_converged(poly): break
+            if is_converged_sqr(i_best, poly): break
 
     return poly[i_best], vals[i_best], calculations
 
 
     
-def fmin_nmead(func, x0, dx=1.0, tol=1e-6):
+def fmin_nmead(func, x0, dx=1.0, tol=1e-6, max_calls = 10000):
     """Function minimiser, based on Nelder-Mead method.
     Returns tuple:
     (x_best, y_best, n_calculations)"""
@@ -134,4 +146,4 @@ def fmin_nmead(func, x0, dx=1.0, tol=1e-6):
     poly = [x0[:] for _ in xrange(n+1)]
     for i in xrange(n):
         poly[i][i] += dx
-    return nmead(func, poly, tol=tol)
+    return nmead(func, poly, tol=tol, max_calls=max_calls)
