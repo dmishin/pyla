@@ -75,6 +75,19 @@ def vec_scale( v, k ):
 def vec_sum( v1, v2 ):
     return [ x+y for x,y in izip(v1,v2) ]
 
+def vecs_sum(vecs):
+    """Sum of several vectors. Must have at elast one."""
+    s = vecs[0][:]
+    for v in vecs[1:]:
+        vec_add_inplace(s,v)
+    return s
+
+def vecs_mean(vecs):
+    """Mean value of several vectors"""
+    s = vecs_sum(vecs)
+    vec_scale_inplace( s, 1.0/len(vecs))
+    return s
+
 def vec_diff( v1, v2 ):
     return [ x-y for x,y in izip(v1,v2) ]
 

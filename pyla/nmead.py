@@ -2,16 +2,6 @@ from pyla.core import *
 import random
 from itertools import izip
 import math
-def sumv(vecs):
-    s = vecs[0][:]
-    for v in vecs[1:]:
-        vec_add_inplace(s,v)
-    return s
-
-def mean(vecs):
-    s = sumv(vecs)
-    vec_scale_inplace( s, 1.0/len(vecs))
-    return s
 
 def first( tpl ):
     return tpl[0]
@@ -81,7 +71,7 @@ def nmead(func, poly, abgd = (1.0, 2.0, 0.35, 0.5), tol = 1e-6, max_calls = 1000
         i_worst1, f_worst1 = maxidx(vals)
         x_worst1 = poly[i_worst1]
         ##### Reflection #####
-        x_c = mean(poly)
+        x_c = vecs_mean(poly)
         x_r = refl(x_c, x_worst)
         f_r = func(x_r)
         calculations += 1

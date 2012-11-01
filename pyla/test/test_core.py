@@ -1,9 +1,9 @@
 import unittest
 from pyla.core import *
+from pyla.test.pyla_test_case import PylaTestCase
 import math
 
-class TestVectorFunctions(unittest.TestCase):
-
+class TestVectorFunctions(PylaTestCase):
     def setUp(self):
         pass
     def test_vec_eq(self):
@@ -20,6 +20,21 @@ class TestVectorFunctions(unittest.TestCase):
     def test_vec_sum(self):
         self.assertTrue( vec_sum( [1.0, 2.0], [3.0,5.0] ),
                          [4.0, 7.0] )
+    def test_vecs_sum_mean(self):
+        v1 = [1.0, 2.0, 3.0]
+        v2 = [2.0, 2.0, -1.0]
+        v3 = [-1.0, 0.0, 3.0]
+
+        self.assertVectorEqual( vecs_sum( [v1, v2, v3] ), 
+                                [2.0, 4.0, 5.0] )
+        self.assertVectorEqual( v1, [1.0, 2.0, 3.0] )
+        self.assertVectorEqual( v2, [2.0, 2.0, -1.0] )
+        self.assertVectorEqual( v3, [-1.0, 0.0, 3.0] ) 
+
+        self.assertVectorEqual( vecs_mean( [v1, v2, v3] ), 
+                                [2.0/3.0, 4.0/3.0, 5.0/3.0] )
+
+        
     def test_vec_diff(self):
         self.assertTrue( vec_diff( [1.0, 2.0], [3.0,5.0] ),
                          [-2.0, -3.0] )
